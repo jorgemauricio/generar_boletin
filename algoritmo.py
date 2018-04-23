@@ -33,7 +33,7 @@ import schedule
 # PDF
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
-from reportlab.lib.pagesizes import landscape
+from reportlab.lib.pagesizes import portrait
 from reportlab.platypus import Image
 
 def main():
@@ -41,7 +41,8 @@ def main():
     Función que genera los mapas de temperatura mínima
     """
     #%% fecha del pronostico
-    fechaPronostico = strftime("%Y-%m-%d")
+    # fechaPronostico = strftime("%Y-%m-%d")
+    fechaPronostico = "2018-04-17"
     variables = ["Rain","Tmax","Tmin","Tpro","Hr","Hrmin","Hrmax"]
 
     LAT_MAX = 33.5791
@@ -117,6 +118,14 @@ def main():
     data4 = pd.read_table(pathFile4, sep=',')
     data5 = pd.read_table(pathFile5, sep=',')
 
+    cols = ["Long","Lat","Graupel","Hail","Rain","Tmax","Tmin","Tpro","Dpoint","Hr","Windpro","WindDir","Hrmin","Hrmax","TprSoil0_10","TprSoil10_40","WprSoil0_10","WprSoil10_40"]
+
+    data1.columns = cols
+    data2.columns = cols
+    data3.columns = cols
+    data4.columns = cols
+    data5.columns = cols
+
     # ciclo para generar los mapas de cada una de las variables
     for variable in variables:
         #%% make one dataFrame
@@ -141,7 +150,9 @@ def main():
 
 
         #%% loop diarios
+
         counterFecha = 0
+
         for i in range(1,6,1):
             #%% set up plot
             plt.clf()
@@ -193,8 +204,8 @@ def main():
             cbar = m.colorbar(cs, location='right', pad="5%")
 
             # simbología colorbar
-            simbologia = generar_simbologia(variable)
-            cbar.set_label(simbologia)
+            # simbologia = generar_simbologia(variable)
+            # cbar.set_label(simbologia)
             titulo_mapa = generarTexto(variable, arrayFechas[counterFecha])
             plt.title(titulo_mapa)
             titulo_archivo = "{}/data/{}/{}_{}.png".format(path, fechaPronostico,variable, i)
@@ -203,6 +214,80 @@ def main():
             counterFecha += 1
             print('****** Genereate: {}'.format(titulo_archivo))
 
+        # generar pdf
+
+        y1 = []
+        y2 = []
+
+        for k in range(1,6):
+            y1.append(data["{}{}".format(variable, k)].max())
+            y2.append(data["{}{}".format(variable, k)].min())
+
+        ind = np.arange(5)
+
+        fig, ax = plt.subplots()
+        width = 0.35
+        rects1 = ax.bar(ind, y1, width, color='darkred')
+        rects2 = ax.bar(ind + width, y2, width, color='darkblue')
+
+        # add some text for labels, title and axes ticks
+        # ax.set_ylabel(simbologia)
+        # ax.set_title(variable)
+        ax.set_xticks(ind + width / 2)
+        ax.set_xticklabels(arrayFechas)
+
+        # ax.legend((rects1[0], rects2[0]), ('Máximo', 'Mínimo'), loc=3)
+
+        def autolabel(rects):
+            """
+            Attach a text label above each bar displaying its height
+            """
+            for rect in rects:
+                height = rect.get_height()
+                ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,
+                        '%d' % int(height),
+                        ha='center', va='bottom')
+
+        autolabel(rects1)
+        autolabel(rects2)
+
+        titulo_grafica = "{}/data/{}/{}_grafica.png".format(path, fechaPronostico, variable)
+
+        plt.savefig(titulo_grafica, dpi=600, bbox_inches='tight' )
+
+        nombre_archivo_pdf = "{}/data/{}/{}.pdf".format(path, fechaPronostico, variable)
+        c = canvas.Canvas(nombre_archivo_pdf, pagesize=portrait(letter))
+
+        # logo inifap
+        logo_inifap = "{}/images/inifap.jpg".format(path)
+        c.drawImage(logo_inifap, 20, 700, width=100, height=100)
+
+        # encabezado
+        c.setFont("Helvetica", 20, leading=None)
+        titulo_pdf = generar_titulo_pdf(variable)
+        c.drawCentredString(350, 750, titulo_pdf)
+
+        # imagen anuales
+        imagen_1 = "{}/data/{}/{}_1.png".format(path, fechaPronostico, variable)
+        imagen_2 = "{}/data/{}/{}_2.png".format(path, fechaPronostico, variable)
+        imagen_3 = "{}/data/{}/{}_3.png".format(path, fechaPronostico, variable)
+        imagen_4 = "{}/data/{}/{}_4.png".format(path, fechaPronostico, variable)
+        imagen_5 = "{}/data/{}/{}_5.png".format(path, fechaPronostico, variable)
+        imagen_6 = "{}/data/{}/{}_grafica.png".format(path, fechaPronostico, variable)
+
+        # draw images
+        c.drawImage(imagen_1, 20, 475, width=260, height=172)
+        c.drawImage(imagen_2, 325, 475, width=260, height=172)
+        c.drawImage(imagen_3, 20, 250, width=260, height=172)
+        c.drawImage(imagen_4, 325, 250, width=260, height=172)
+        c.drawImage(imagen_5, 20, 25, width=260, height=172)
+        c.drawImage(imagen_6, 325, 25, width=260, height=172)
+
+        c.showPage()
+        c.save()
+
+        print(titulo_pdf)
+
 def colores_por_variable(v):
     """
     param: v: variable
@@ -210,14 +295,10 @@ def colores_por_variable(v):
     """
     if v == "Rain":
         return "gist_ncar"
-    if v == "Tmax":
-        return "gist_heat_r"
-    if v == "Tmin":
-        return "Blues_r"
-    if v == "Tpro":
-        return "gist_earth"
+    if v == "Tmax" or v == "Tmin" or v == "Tpro":
+        return "jet"
     if v == "Hr" or v == "Hrmin" or v == "Hrmax":
-        return "seismic_r"
+        return "YlGnBu"
     else:
         pass
 
@@ -233,34 +314,71 @@ def generar_simbologia(v):
     if v == "Hr" or v == "Hrmin" or v == "Hrmax":
         return "%"
 
+def generar_titulo_pdf(v):
+    titulo = ""
+    if v == "Rain":
+        titulo = "Precipitación (mm) acumulada en 24h"
+        return titulo
+    elif v == "Tmax":
+        titulo = "Temperatura (°C) máxima en 24h"
+        return titulo
+    elif v == "Tmin":
+        titulo = "Temperatura (°C) mínima en 24h"
+        return titulo
+    elif v == "Tpro":
+        titulo = "Temperatura (°C) promedio en 24h"
+        return titulo
+    elif v == "Hr":
+        titulo = "Humedad relativa (%) promedio en 24h"
+        return titulo
+    elif v == "Hrmin":
+        titulo = "Humedad relativa (%) mínima en 24h"
+        return titulo
+    elif v == "Hrmax":
+        titulo = "Humedad relativa (%) máxima en 24h"
+        return titulo
+    else:
+        pass
+
+
 def generarTexto(v, f):
     """
     Función que nos permite generar el texto correspondiente para cada mapa
     param: v: variable
     param: f: fecha
     """
-    titulo = ""
-    if v == "Rain":
-        titulo = "Precipitación acumulada en 24h\n Pronóstico válido para: {}".format(f)
-        return titulo
-    elif v == "Tmax":
-        titulo = "Temperatura máxima en 24h\n Pronóstico válido para: {}".format(f)
-        return titulo
-    elif v == "Tmin":
-        titulo = "Temperatura mínima en 24h\n Pronóstico válido para: {}".format(f)
-        return titulo
-    elif v == "Tpro":
-        titulo = "Temperatura promedio en 24h\n Pronóstico válido para: {}".format(f)
-        return titulo
-    elif v == "Hr":
-        titulo = "Humedar relativa promedio en 24h\n Pronóstico válido para: {}".format(f)
-        return titulo
-    elif v == "Hrmin":
-        titulo = "Humedad relativa mínima en 24h\n Pronóstico válido para: {}".format(f)
-        return titulo
-    elif v == "Hrmax":
-        titulo = "Humedad relativa máxima en 24h\n Pronóstico válido para: {}".format(f)
-        return titulo
+    anio_t, mes_t, dia_t = f.split("-")
+    titulo = "{} de {} de {}".format(dia_t, generar_mes_en_string(int(mes_t)), anio_t)
+    return titulo
+
+def generar_mes_en_string(m):
+    """
+
+    """
+    if m == 1:
+        return "Enero"
+    elif m == 2:
+        return "Febrero"
+    elif m == 3:
+        return "Marzo"
+    elif m == 4:
+        return "Abril"
+    elif m == 5:
+        return "Mayo"
+    elif m == 6:
+        return "Junio"
+    elif m == 7:
+        return "Julio"
+    elif m == 8:
+        return "Agosto"
+    elif m == 9:
+        return "Septiembre"
+    elif m == 10:
+        return "Octubre"
+    elif m == 11:
+        return "Noviembre"
+    elif m == 12:
+        return "Diciembre"
     else:
         pass
 
