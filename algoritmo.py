@@ -216,6 +216,9 @@ def main():
 
         # generar pdf
 
+        """
+        GENERAR GRÁFICA
+
         y1 = []
         y2 = []
 
@@ -239,9 +242,7 @@ def main():
         # ax.legend((rects1[0], rects2[0]), ('Máximo', 'Mínimo'), loc=3)
 
         def autolabel(rects):
-            """
-            Attach a text label above each bar displaying its height
-            """
+            # Attach a text label above each bar displaying its height
             for rect in rects:
                 height = rect.get_height()
                 ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,
@@ -254,6 +255,8 @@ def main():
         titulo_grafica = "{}/data/{}/{}_grafica.png".format(path, fechaPronostico, variable)
 
         plt.savefig(titulo_grafica, dpi=600, bbox_inches='tight' )
+        """
+
 
         nombre_archivo_pdf = "{}/data/{}/{}.pdf".format(path, fechaPronostico, variable)
         c = canvas.Canvas(nombre_archivo_pdf, pagesize=portrait(letter))
@@ -273,7 +276,7 @@ def main():
         imagen_3 = "{}/data/{}/{}_3.png".format(path, fechaPronostico, variable)
         imagen_4 = "{}/data/{}/{}_4.png".format(path, fechaPronostico, variable)
         imagen_5 = "{}/data/{}/{}_5.png".format(path, fechaPronostico, variable)
-        imagen_6 = "{}/data/{}/{}_grafica.png".format(path, fechaPronostico, variable)
+        imagen_6 = "{}/images/info_wrf.png".format(path)
 
         # draw images
         c.drawImage(imagen_1, 20, 475, width=260, height=172)
