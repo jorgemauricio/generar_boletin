@@ -100,8 +100,7 @@ ENV/
 #data
 /data
 
-# api
+#api
 api.py
-
 # mypy
 .mypy_cache/
