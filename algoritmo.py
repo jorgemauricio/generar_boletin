@@ -30,6 +30,7 @@ import shutil
 import csv
 import schedule
 from subprocess import call
+from api import claves
 
 # PDF
 from reportlab.pdfgen import canvas
@@ -301,6 +302,25 @@ def main():
     endProcess = strftime("%Y-%m-%d %H:%M:%S")
     print(startProcess)
     print(endProcess)
+
+    claves = claves()
+
+    ftp = ftplib.FTP(claves.ip)
+    ftp.login(claves.usr, claves.pwd)
+    #%% cambiar a directorio
+    ftp.cwd('Content/documentos')
+
+    # subir archivo
+    fileName = "boletin.pdf"
+    file = open(fileName,'rb')
+    comandoFTP = 'STOR boletin.pdf'                  # file to send
+    ftp.storbinary(comandoFTP, file)
+
+    # cerrar conexión
+    file.close()                                    # close file and FTP
+    ftp.quit()
+
+
 
 def colores_por_variable(v):
     """
