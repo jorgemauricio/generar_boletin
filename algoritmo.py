@@ -29,6 +29,7 @@ import ftplib
 import shutil
 import csv
 import schedule
+from subprocess import call
 
 # PDF
 from reportlab.pdfgen import canvas
@@ -40,9 +41,11 @@ def main():
     """
     Función que genera los mapas de temperatura mínima
     """
+
+    startProcess = strftime("%Y-%m-%d %H:%M:%S")
     #%% fecha del pronostico
     # fechaPronostico = strftime("%Y-%m-%d")
-    fechaPronostico = "2018-04-17"
+    fechaPronostico = "2018-04-24"
     variables = ["Rain","Tmax","Tmin","Tpro","Hr","Hrmin","Hrmax"]
 
     LAT_MAX = 33.5791
@@ -210,7 +213,7 @@ def main():
             plt.title(titulo_mapa)
             titulo_archivo = "{}/data/{}/{}_{}.png".format(path, fechaPronostico,variable, i)
             plt.annotate('@2018 INIFAP', xy=(-102,22), xycoords='figure fraction', xytext=(0.45,0.45), color='g')
-            plt.savefig(titulo_archivo, dpi=600, bbox_inches='tight')
+            plt.savefig(titulo_archivo, dpi=300, bbox_inches='tight')
             counterFecha += 1
             print('****** Genereate: {}'.format(titulo_archivo))
 
@@ -290,6 +293,14 @@ def main():
         c.save()
 
         print(titulo_pdf)
+
+    # generar boletin
+    ruta_pdf = "{}/data/{}/".format(path, fechaPronostico)
+    os.chdir(ruta_pdf)
+    os.system("pdftk Rain.pdf Tmax.pdf Tmin.pdf Tpro.pdf Hrmax.pdf Hrmin.pdf Hr.pdf cat output boletin.pdf")
+    endProcess = strftime("%Y-%m-%d %H:%M:%S")
+    print(startProcess)
+    print(endProcess)
 
 def colores_por_variable(v):
     """
