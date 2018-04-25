@@ -44,9 +44,9 @@ def main():
     """
 
     startProcess = strftime("%Y-%m-%d %H:%M:%S")
-    #%% fecha del pronostico
-    # fechaPronostico = strftime("%Y-%m-%d")
-    fechaPronostico = "2018-04-24"
+    # #%% fecha del pronostico
+    # # fechaPronostico = strftime("%Y-%m-%d")
+    fechaPronostico = "2018-04-25"
     variables = ["Rain","Tmax","Tmin","Tpro","Hr","Hrmin","Hrmax"]
 
     LAT_MAX = 33.5791
@@ -303,10 +303,10 @@ def main():
     print(startProcess)
     print(endProcess)
 
-    claves = claves()
+    access = claves()
 
-    ftp = ftplib.FTP(claves.ip)
-    ftp.login(claves.usr, claves.pwd)
+    ftp = ftplib.FTP(access.ip)
+    ftp.login(access.usr, access.pwd)
     #%% cambiar a directorio
     ftp.cwd('Content/documentos')
 
